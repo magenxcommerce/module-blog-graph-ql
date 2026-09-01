@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Magenx_BlogGraphQl: the GraphQL half of the blog.
+
+  Magenx_Blog owns the entities (post, category, tag), their admin CRUD and
+  the magenx_blog/* configuration. This module owns nothing of its own — no
+  tables, no config, no admin — it only exposes that data to the Next.js
+  storefront, the same split as Magenx_Rma / Magenx_RmaGraphQl.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="Magenx_BlogGraphQl">
+        <sequence>
+            <module name="Magenx_Blog"/>
+            <module name="Magento_GraphQl"/>
+            <module name="Magento_CatalogGraphQl"/>
+            <module name="Magento_Catalog"/>
+            <module name="Magento_Store"/>
+        </sequence>
+    </module>
+</config>

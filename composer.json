@@ -1,0 +1,23 @@
+{
+    "name": "magenxcommerce/module-blog-graph-ql",
+    "description": "GraphQL surface for Magenx_Blog: posts, categories, tags, related posts and related products, for a Next.js storefront.",
+    "type": "magento2-module",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0||~8.4.0||~8.5.0",
+        "magenxcommerce/module-blog": "*",
+        "magento/framework": "*",
+        "magento/module-catalog": "*",
+        "magento/module-catalog-graph-ql": "*",
+        "magento/module-graph-ql": "*",
+        "magento/module-store": "*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Magenx\\BlogGraphQl\\": ""
+        }
+    }
+}

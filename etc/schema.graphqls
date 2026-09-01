@@ -1,0 +1,101 @@
+# Copyright © Magenx. All rights reserved.
+
+type Query {
+    blogPosts(
+        filter: BlogPostFilterInput @doc(description: "Server-side filters: url_key, category_id, tag_id and sku are all resolved in the database, not scanned client-side.")
+        pageSize: Int @doc(description: "Number of posts to return. Defaults to 10.")
+        currentPage: Int @doc(description: "Page number, starting at 1. Defaults to 1.")
+    ): BlogPosts
+        @resolver(class: "Magenx\\BlogGraphQl\\Model\\Resolver\\BlogPosts")
+        @doc(description: "A paginated, filterable list of published blog posts for the current store, newest first.")
+
+    blogPost(
+        urlKey: String! @doc(description: "The post's URL key.")
+    ): BlogPost
+        @resolver(class: "Magenx\\BlogGraphQl\\Model\\Resolver\\BlogPost")
+        @doc(description: "A single published blog post by URL key, or null when it does not exist, is disabled, is not assigned to the current store, or is future-dated.")
+
+    blogTag(
+        urlKey: String! @doc(description: "The tag's URL key.")
+    ): BlogTag
+        @resolver(class: "Magenx\\BlogGraphQl\\Model\\Resolver\\BlogTag")
+        @doc(description: "A single blog tag by URL key, with the published posts assigned to it, or null when it does not exist.")
+
+    blogCategories: [BlogPostCategory!]!
+        @resolver(class: "Magenx\\BlogGraphQl\\Model\\Resolver\\BlogCategories")
+        @doc(description: "Every active blog category, ordered by position.")
+}
+
+input BlogPostFilterInput @doc(description: "Server-side filters for blogPosts. All provided fields are combined with AND.") {
+    url_key: String @doc(description: "Exact URL key match.")
+    category_id: Int @doc(description: "Only posts assigned to this category.")
+    tag_id: Int @doc(description: "Only posts assigned to this tag.")
+    sku: String @doc(description: "Only posts with this product SKU in their related products — the \"articles about this product\" lookup.")
+}
+
+type BlogPosts @doc(description: "A page of blog posts.") {
+    total_count: Int @doc(description: "The total number of posts matching the query, across all pages.")
+    items: [BlogPost!]! @doc(description: "The posts on this page.")
+}
+
+type BlogPost @doc(description: "A blog post.") {
+    post_id: Int! @doc(description: "The post's unique ID.")
+    name: String! @doc(description: "The post title.")
+    short_description: String @doc(description: "A short summary shown on listing cards.")
+    post_content: String @doc(description: "The full post body, authored in the admin WYSIWYG and returned as HTML exactly as stored. Nothing is sanitized server-side; the Next.js storefront runs it through sanitizeCmsHtml on read, and any other consumer must sanitize before rendering.")
+    image: String @doc(description: "The headline image as a media path rooted at the store's media base — \"/media/blog/hero.jpg\", exactly as the admin media gallery inserted it — or null when none is set. Deliberately host-less: in a headless setup the storefront serves media from its own /media route, not from the Magento host.")
+    url_key: String! @doc(description: "The URL key used to build the post's storefront URL.")
+    publish_date: String @doc(description: "The publish date, or null when unset.")
+    author_name: String @doc(description: "The display name of the post's author, or null when unset.")
+    meta_title: String @doc(description: "SEO meta title, or null when unset.")
+    meta_description: String @doc(description: "SEO meta description, or null when unset.")
+    meta_keywords: String @doc(description: "SEO meta keywords, or null when unset.")
+    categories: BlogPostCategories
+        @resolver(class: "Magenx\\BlogGraphQl\\Model\\Resolver\\Post\\Categories")
+        @doc(description: "The categories this post is assigned to.")
+    tags: BlogTags
+        @resolver(class: "Magenx\\BlogGraphQl\\Model\\Resolver\\Post\\Tags")
+        @doc(description: "The tags assigned to this post.")
+    products: BlogPostProducts
+        @resolver(class: "Magenx\\BlogGraphQl\\Model\\Resolver\\Post\\Products")
+        @doc(description: "The products related to this post (admin-managed), ordered by their configured position.")
+    posts: BlogPosts
+        @resolver(class: "Magenx\\BlogGraphQl\\Model\\Resolver\\Post\\RelatedPosts")
+        @doc(description: "Other posts related to this post (admin-managed), ordered by their configured position.")
+}
+
+type BlogPostCategories @doc(description: "A post's assigned categories.") {
+    items: [BlogPostCategory!]!
+}
+
+type BlogPostCategory @doc(description: "A blog category.") {
+    category_id: Int! @doc(description: "The category's unique ID.")
+    name: String! @doc(description: "The category name.")
+    url_key: String! @doc(description: "The URL key used to build the category's storefront URL.")
+}
+
+type BlogTags @doc(description: "A post's assigned tags.") {
+    items: [BlogTag!]!
+}
+
+type BlogTag @doc(description: "A blog tag.") {
+    tag_id: Int! @doc(description: "The tag's unique ID.")
+    name: String! @doc(description: "The tag name.")
+    url_key: String! @doc(description: "The URL key used to build the tag's storefront URL.")
+    description: String @doc(description: "A description of the tag, or null when unset.")
+    meta_title: String @doc(description: "SEO meta title, or null when unset.")
+    meta_description: String @doc(description: "SEO meta description, or null when unset.")
+    posts: BlogPosts
+        @resolver(class: "Magenx\\BlogGraphQl\\Model\\Resolver\\Tag\\Posts")
+        @doc(description: "The published posts assigned to this tag.")
+}
+
+type BlogPostProducts @doc(description: "A post's related products.") {
+    items: [BlogPostProductRef!]!
+}
+
+type BlogPostProductRef @doc(description: "A lightweight reference to a related product. Resolve full catalog data via the storefront's own product-by-SKU lookup when display data is needed.") {
+    entity_id: Int @doc(description: "The product's entity ID.")
+    sku: String! @doc(description: "The product SKU.")
+    url_key: String @doc(description: "The product's URL key, or null when it has none configured.")
+}
